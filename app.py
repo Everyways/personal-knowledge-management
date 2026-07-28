@@ -3,11 +3,13 @@ import shutil
 import tempfile
 import traceback
 import uuid
+from datetime import datetime
 from pathlib import Path
 
 import uvicorn
 import yaml
 from apscheduler.schedulers.background import BackgroundScheduler
+from dotenv import load_dotenv
 from fastapi import BackgroundTasks, FastAPI, File, Form, UploadFile, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -18,6 +20,8 @@ import ipaddress
 import os
 import secrets
 import time
+
+load_dotenv(Path(__file__).parent / ".env")
 
 import jobs
 import notes
@@ -60,6 +64,12 @@ def _client_ip(request) -> str:
 if _USER and _PASS:
     @app.middleware("http")
     async def _guard(request, call_next):
+        # /favicon.ico est public : les navigateurs le redemandent automatiquement
+        # sans forcément réutiliser les identifiants Basic Auth déjà saisis, et son
+        # contenu n'est pas sensible.
+        if request.url.path == "/favicon.ico":
+            return await call_next(request)
+
         # 1. Limite de taille (un upload géant ne peut plus remplir le disque)
         if int(request.headers.get("content-length") or 0) > MAX_BODY:
             return Response("Fichier trop volumineux (max 200 Mo)", status_code=413)
@@ -222,7 +232,7 @@ poll();
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -238,118 +248,6 @@ def api_status():
     active_labels = {j["label"] for j in active}
     history = [e for e in last_logs(20) if e["label"] not in active_labels]
     return JSONResponse({"jobs": active, "history": history})
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
-
-@app.get("/api/today")
-def api_today():
-    """Retourne les médias lus aujourd'hui (status=ok du jour)."""
-    today = datetime.now().strftime("%d/%m")
-    entries = last_logs(100)
-    today_entries = [e for e in entries if e["date"].startswith(today) and e["status"] == "ok"]
-    return JSONResponse(today_entries)
 
 @app.get("/api/today")
 def api_today():

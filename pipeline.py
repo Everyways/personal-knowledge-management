@@ -4,16 +4,18 @@ import os
 import re
 import socket
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
 
 BASE = Path(__file__).parent
-YT_DLP = [str(BASE / "venv" / "bin" / "python3"), "-m", "yt_dlp"]
+YT_DLP = [sys.executable, "-m", "yt_dlp"]
 
 import requests
 import yaml
-from mistralai import Mistral
+from mistralai.client import Mistral
+from mistralai.client.utils.retries import BackoffStrategy, RetryConfig
 
 CONFIG = yaml.safe_load((Path(__file__).parent / "config.yaml").read_text(encoding="utf-8"))
 
@@ -25,7 +27,7 @@ SYSTEM = (
 
 def mistral_summarize(prompt: str, system: str = SYSTEM) -> str:
     """Appelle Mistral (modèle gratuit)."""
-    api_key = CONFIG.get("mistral_api_key") or os.environ.get("MISTRAL_API_KEY")
+    api_key = os.environ.get("MISTRAL_API_KEY") or CONFIG.get("mistral_api_key")
     if not api_key:
         raise ValueError("MISTRAL_API_KEY manquant dans .env ou config.yaml")
 
@@ -37,6 +39,16 @@ def mistral_summarize(prompt: str, system: str = SYSTEM) -> str:
             {"role": "user", "content": prompt}
         ],
         max_tokens=2000,
+        # Le tier gratuit renvoie fréquemment 429 ; on réessaie avec backoff
+        # exponentiel plutôt que de faire échouer tout le job.
+        retries=RetryConfig(
+            strategy="backoff",
+            backoff=BackoffStrategy(
+                initial_interval=1000, max_interval=20_000,
+                exponent=2, max_elapsed_time=120_000,
+            ),
+            retry_connection_errors=True,
+        ),
     )
     return response.choices[0].message.content.strip()
 

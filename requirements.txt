@@ -10,3 +10,4 @@ yt-dlp
 faster-whisper
 mistralai
 jinja2
+python-dotenv
