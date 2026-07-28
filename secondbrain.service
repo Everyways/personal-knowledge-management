@@ -1,0 +1,23 @@
+[Unit]
+Description=second-brain (résumé IA + Obsidian + veille)
+After=network-online.target
+
+[Service]
+User=everyways
+WorkingDirectory=/home/everyways/second-brain
+EnvironmentFile=/home/everyways/second-brain/.env
+ExecStart=/home/everyways/second-brain/venv/bin/python app.py
+Restart=on-failure
+RestartSec=10
+Environment=HOME=/home/everyways
+
+# Durcissement : le process ne peut ni élever ses privilèges, ni écrire hors
+# de ses dossiers de travail. Si un job casse (accès disque refusé dans les
+# logs), retirer ProtectSystem/ReadWritePaths en premier.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/home/everyways/second-brain /home/everyways/2nd_brain_obsidian /home/everyways/.cache
+
+[Install]
+WantedBy=multi-user.target

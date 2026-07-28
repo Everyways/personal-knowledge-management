@@ -1,0 +1,81 @@
+Already up to date.
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: unable to auto-detect email address (got 'everyways@everyways-unix.(none)')
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: could not read Username for 'https://github.com': No such device or address
+fatal: unable to get credential storage lock in 1000 ms: No such file or directory
+Already up to date.
+2026-07-01 20:09 — nothing to commit
+Already up to date.
+2026-07-10 09:10 — nothing to commit
+Already up to date.
+[main 2bc53f2] vault sync 2026-07-10 09:12
+ 42 files changed, 1044 insertions(+)
+ create mode 100644 2nd brain/Inbox/2026-07-01 3-AI-Systems-That-Generate-Income-on-Autopilot.md
+ create mode 100644 2nd brain/Inbox/2026-07-01 How-I-Launched-a-No-Code-SaaS-in-90-Days-and-Got-My-First-10.md
+ create mode 100644 2nd brain/Inbox/2026-07-01 How-to-Create-Loops-with-Claude-Code-A-Practical-Guide-to-Ag.md
+ create mode 100644 2nd brain/Inbox/2026-07-01 How-to-Prevent-Malicious-Code-Execution-Through-Uploaded-Ima.md
+ create mode 100644 2nd brain/Inbox/2026-07-01 How-to-make-money-by-simply-ranking-2-AI-answers-in-2026.md
+ create mode 100644 2nd brain/Inbox/2026-07-01 I-used-to-be-a-pure-index-fund-guy-VOO-baby-Set-it-forget-it.md
+ create mode 100644 2nd brain/Inbox/2026-07-01 Make-Money-Selling-Digital-Products-Without-Creating-Anythin.md
+ create mode 100644 2nd brain/Inbox/2026-07-01 Medium.md
+ create mode 100644 2nd brain/Inbox/2026-07-01 The-5-N8N-Automations-Making-Solo-Founders-10KMonth-Step-by.md
+ create mode 100644 2nd brain/Inbox/2026-07-01 Top-5-SaaS-Ideas-to-Build-Before-2026-Ends.md
+ create mode 100644 2nd brain/Inbox/2026-07-01 Underrated-AI-Music-Method-That-Can-Earn-You-1000-Every-Mont.md
+ create mode 100644 2nd brain/Inbox/2026-07-01 You-Shouldnt-Be-Prompting-AI-Anymore-You-Should-Be-Designing 2.md
+ create mode 100644 2nd brain/Inbox/2026-07-01 You-Shouldnt-Be-Prompting-AI-Anymore-You-Should-Be-Designing.md
+ create mode 100644 "2nd brain/Inbox/2026-07-02 25-id\303\251es-de-business-rentables-\303\240-lancer-en-2026.md"
+ create mode 100644 "2nd brain/Inbox/2026-07-02 47-id\303\251es-de-business-pour-se-lancer-en-2026.md"
+ create mode 100644 2nd brain/Inbox/2026-07-02 Anthropics-Fable-returns-worldwide.md
+ create mode 100644 2nd brain/Inbox/2026-07-02 Startups-hit-a-nerve.md
+ create mode 100644 2nd brain/Inbox/2026-07-02 Tech-In-Depth.md
+ create mode 100644 2nd brain/Inbox/2026-07-02 The-Agent-That-Eats-Your-Budget.md
+ create mode 100644 "2nd brain/Inbox/2026-07-09 0807---Bruno-Retailleau-pr\303\251sente-son-plan-\303\240-25-milliards-pou.md"
+ create mode 100644 2nd brain/Inbox/2026-07-09 BDM.md
+ create mode 100644 2nd brain/Inbox/2026-07-09 Bloomberg---Are-you-a-robot.md
+ create mode 100644 2nd brain/Inbox/2026-07-10 One-Login-All-Apps-Unlocked-Getting-to-Know-SSO-and-How-to-B.md
+ create mode 100644 2nd brain/Inbox/2026-07-10 Session-Fixation-in-PHP-The-Bug-Every-OWASP-Report-Mentions.md
+ create mode 100644 2nd brain/Projets/Analyses/2026-07-02 Analyse-script-trading.md
+ create mode 100644 2nd brain/Projets/Analyses/2026-07-03 Analyse-upsalt.md
+ create mode 100644 2nd brain/Projets/Analyses/2026-07-04 Analyse-motoproof.md
+ create mode 100644 2nd brain/Projets/Analyses/2026-07-05 Analyse-script-trading.md
+ create mode 100644 2nd brain/Projets/Analyses/2026-07-06 Analyse-upsalt.md
+ create mode 100644 2nd brain/Projets/Analyses/2026-07-07 Analyse-motoproof.md
+ create mode 100644 2nd brain/Projets/Analyses/2026-07-08 Analyse-script-trading.md
+ create mode 100644 2nd brain/Projets/Analyses/2026-07-09 Analyse-upsalt.md
+ create mode 100644 2nd brain/Projets/Analyses/2026-07-10 Analyse-motoproof.md
+ create mode 100644 2nd brain/Veille/2026-07-02 Veille-du-2026-07-02.md
+ create mode 100644 2nd brain/Veille/2026-07-03 Veille-du-2026-07-03.md
+ create mode 100644 2nd brain/Veille/2026-07-04 Veille-du-2026-07-04.md
+ create mode 100644 2nd brain/Veille/2026-07-05 Veille-du-2026-07-05.md
+ create mode 100644 2nd brain/Veille/2026-07-06 Veille-du-2026-07-06.md
+ create mode 100644 2nd brain/Veille/2026-07-07 Veille-du-2026-07-07.md
+ create mode 100644 2nd brain/Veille/2026-07-08 Veille-du-2026-07-08.md
+ create mode 100644 2nd brain/Veille/2026-07-09 Veille-du-2026-07-09.md
+ create mode 100644 2nd brain/Veille/2026-07-10 Veille-du-2026-07-10.md
+To https://github.com/Everyways/2nd_brain.git
+   fd61e78..2bc53f2  main -> main
+2026-07-10 09:12 — pushed ok

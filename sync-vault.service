@@ -1,0 +1,8 @@
+[Unit]
+Description=Sync Obsidian vault to GitHub
+
+[Service]
+Type=oneshot
+User=everyways
+ExecStart=/home/everyways/second-brain/sync-vault.sh
+Environment=HOME=/home/everyways

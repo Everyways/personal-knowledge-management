@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-multipart
+apscheduler
+pyyaml
+requests
+trafilatura
+feedparser
+yt-dlp
+faster-whisper
+mistralai
+jinja2

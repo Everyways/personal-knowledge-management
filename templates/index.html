@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="/favicon.ico">
+  <title>second-brain</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h1>🧠 second-brain</h1>
+
+  <form action="/submit" method="post" enctype="multipart/form-data">
+    <label>URL (article, YouTube…)</label>
+    <input type="url" name="url" placeholder="https://…">
+
+    <label>ou fichier (audio, vidéo, texte)</label>
+    <input type="file" name="file">
+
+    <label>ou texte à analyser</label>
+    <textarea name="text" rows="4" placeholder="Colle un texte ici…"></textarea>
+
+    <button>Analyser → Obsidian</button>
+    <p><small>Traitement asynchrone — l’audio/vidéo sans sous-titres peut prendre plusieurs minutes.</small></p>
+  </form>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('today')">Lu aujourd’hui</button>
+    <button class="tab-btn" onclick="showTab('submitted')">Soumis</button>
+  </div>
+
+  <div id="today" class="tab-content">
+    <h2>Lu aujourd’hui</h2>
+    <div id="today-list">Chargement…</div>
+  </div>
+
+  <div id="submitted" class="tab-content" style="display:none">
+    <h2>Soumis</h2>
+    <div id="submitted-list">Chargement…</div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

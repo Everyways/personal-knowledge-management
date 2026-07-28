@@ -1,0 +1,48 @@
+# ===== Configuration second-brain =====
+# Chemin du vault Obsidian (le clone git sur le serveur)
+vault_path: "/home/everyways/2nd_brain_obsidian/2nd brain"
+
+# Mistral (modèle gratuit via API)
+mistral_model: mistral-large-latest
+mistral_api_key: ${MISTRAL_API_KEY}
+
+# Serveur web
+port: 8085
+
+# Email (Gmail : créer un "mot de passe d'application")
+# Le mot de passe n'est plus stocké ici : voir SMTP_PASSWORD dans /home/everyways/second-brain/.env
+
+# Email (Gmail : créer un "mot de passe d'application" sur https://myaccount.google.com/apppasswords)
+# Le mot de passe n'est plus stocké ici : voir SMTP_PASSWORD dans /home/everyways/second-brain/.env
+email:
+  to: fauriebenoit@gmail.com
+  smtp_host: smtp.gmail.com
+  smtp_port: 587
+  smtp_user: fauriebenoit@gmail.com
+
+# Horaires (heure locale du serveur)
+# Pas d'heure de push dédiée : project_hour et digest_hour poussent déjà le vault
+# (pull+add+commit+push) à la fin de leur traitement — plus besoin d'un 3e créneau.
+schedule:
+  project_hour: 3         # analyse projet à 03:00 (pousse le vault en fin de tâche)
+  digest_hour: 7          # email de veille à 07:30 (pousse le vault en fin de tâche)
+  digest_minute: 30
+
+# Tes projets (1 analysé par jour, en rotation)
+projects:
+  - upsalt
+  - motoproof
+  - script-trading
+  - finances-perso
+
+# Dossiers dans le vault
+paths:
+  inbox: Inbox            # résumés des contenus soumis
+  veille: Veille          # digests quotidiens
+  analyses: Projets/Analyses
+
+# Fichier des thèmes de veille (1 thème par ligne, modifiable dans Obsidian)
+themes_file: Veille/themes.md
+
+# Langue des résumés
+language: fr

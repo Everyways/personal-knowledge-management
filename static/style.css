@@ -1,0 +1,65 @@
+body {
+  font-family: system-ui;
+  max-width: 680px;
+  margin: 40px auto;
+  padding: 0 16px;
+  background: #fafaf7;
+  color: #222;
+}
+h1 { font-size: 1.4em; }
+form {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+input[type=url], textarea, input[type=file] {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+button {
+  background: #3a5a40;
+  color: #fff;
+  border: 0;
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-size: 1em;
+  cursor: pointer;
+}
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.tab-btn {
+  background: #eee;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.tab-btn.active {
+  background: #3a5a40;
+  color: white;
+}
+.tab-content {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+}
+.entry {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+.entry:last-child {
+  border-bottom: none;
+}
+.date { color: #888; font-size: 0.85em; }
+.label { font-weight: 500; }
+.detail { color: #666; font-size: 0.9em; }
