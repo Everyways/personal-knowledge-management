@@ -1,0 +1,13 @@
+# Environnement virtuel
+.venv/
+venv/
+
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs de l'app
+journal.jsonl
