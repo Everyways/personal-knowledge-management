@@ -1,12 +1,12 @@
 [Unit]
-Description=second-brain (résumé IA + Obsidian + veille)
+Description=personal-knowledge-management (résumé IA + Obsidian + veille)
 After=network-online.target
 
 [Service]
 User=everyways
-WorkingDirectory=/home/everyways/second-brain
-EnvironmentFile=/home/everyways/second-brain/.env
-ExecStart=/home/everyways/second-brain/venv/bin/python app.py
+WorkingDirectory=/home/everyways/personal-knowledge-management
+EnvironmentFile=/home/everyways/personal-knowledge-management/.env
+ExecStart=/home/everyways/personal-knowledge-management/.venv/bin/python app.py
 Restart=on-failure
 RestartSec=10
 Environment=HOME=/home/everyways
@@ -17,7 +17,7 @@ Environment=HOME=/home/everyways
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
-ReadWritePaths=/home/everyways/second-brain /home/everyways/2nd_brain_obsidian /home/everyways/.cache
+ReadWritePaths=/home/everyways/personal-knowledge-management /home/everyways/2nd_brain_obsidian /home/everyways/.cache
 
 [Install]
 WantedBy=multi-user.target
