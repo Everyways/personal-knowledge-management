@@ -27,6 +27,8 @@ schedule:
   project_hour: 3         # analyse projet à 03:00 (pousse le vault en fin de tâche)
   digest_hour: 7          # email de veille à 07:30 (pousse le vault en fin de tâche)
   digest_minute: 30
+  weekly_day: sun         # jour de la synthèse hebdomadaire
+  weekly_hour: 8          # heure de la synthèse hebdomadaire (pousse le vault en fin de tâche)
 
 # Tes projets (1 analysé par jour, en rotation)
 projects:
@@ -40,6 +42,7 @@ paths:
   inbox: Inbox            # résumés des contenus soumis
   veille: Veille          # digests quotidiens
   analyses: Projets/Analyses
+  hebdo: Veille/Hebdo     # synthèses hebdomadaires
 
 # Fichier des thèmes de veille (1 thème par ligne, modifiable dans Obsidian)
 themes_file: Veille/themes.md

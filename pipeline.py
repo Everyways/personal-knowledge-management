@@ -6,6 +6,8 @@ import socket
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -24,6 +26,22 @@ SYSTEM = (
     "de façon concise et structurée, en markdown."
 )
 
+# Espace minimum entre deux appels Mistral, tous appelants confondus (soumissions
+# + jobs planifiés). Le tier gratuit renvoie des 429 dès qu'on rafale plusieurs
+# soumissions d'affilée (observé le 28/07) ; ce verrou lisse les rafales au lieu
+# de laisser chaque appel les déclencher puis compter sur le retry pour rattraper.
+_RATE_LOCK = threading.Lock()
+_last_call = [0.0]
+MIN_CALL_INTERVAL = 3.0  # secondes
+
+
+def _throttle():
+    with _RATE_LOCK:
+        wait = _last_call[0] + MIN_CALL_INTERVAL - time.time()
+        if wait > 0:
+            time.sleep(wait)
+        _last_call[0] = time.time()
+
 
 def mistral_summarize(prompt: str, system: str = SYSTEM) -> str:
     """Appelle Mistral (modèle gratuit)."""
@@ -31,6 +49,7 @@ def mistral_summarize(prompt: str, system: str = SYSTEM) -> str:
     if not api_key:
         raise ValueError("MISTRAL_API_KEY manquant dans .env ou config.yaml")
 
+    _throttle()
     client = Mistral(api_key=api_key)
     response = client.chat.complete(
         model=CONFIG.get("mistral_model", "mistral-large-latest"),
@@ -53,8 +72,24 @@ def mistral_summarize(prompt: str, system: str = SYSTEM) -> str:
     return response.choices[0].message.content.strip()
 
 
-def summarize(text: str, title: str = "") -> str:
-    """Résumé map-reduce via Mistral."""
+def _extract_tags(raw: str) -> tuple[str, list[str]]:
+    """Sépare la section ## Tags du reste du résumé et la convertit en liste de
+    mots-clés slugifiés (pour le frontmatter Obsidian, plutôt qu'en texte libre
+    dupliqué dans le corps de la note)."""
+    m = re.search(r"##?\s*Tags\s*\n(.+?)(?:\n##|\Z)", raw, re.IGNORECASE | re.DOTALL)
+    if not m:
+        return raw.strip(), []
+    body = (raw[: m.start()] + raw[m.end():]).strip()
+    tags = []
+    for t in re.split(r"[,\n]", m.group(1)):
+        t = re.sub(r"[^\w\-]+", "-", t.strip().lstrip("#").strip().lower(), flags=re.UNICODE).strip("-")
+        if t and t not in tags:
+            tags.append(t)
+    return body, tags[:6]
+
+
+def summarize(text: str, title: str = "") -> tuple[str, list[str]]:
+    """Résumé map-reduce via Mistral. Retourne (corps_markdown, tags)."""
     text = text.strip()
     if not text:
         raise ValueError("Aucun texte à résumer")
@@ -74,10 +109,12 @@ Réponds exactement dans ce format markdown :
 (5 à 8 puces)
 ## Idées actionnables
 (2 à 4 puces, ou "Aucune" si non pertinent)
+## Tags
+(3 à 5 mots-clés courts en minuscules, séparés par des virgules, sans #)
 
 Contenu :
 {text}"""
-    return mistral_summarize(prompt)
+    return _extract_tags(mistral_summarize(prompt))
 
 
 # ---------- Extraction ----------
@@ -198,7 +235,7 @@ def _check_url_public(url: str):
 
 
 def process(url: str = None, file_path: str = None, raw_text: str = None):
-    """Point d'entrée : retourne (titre, résumé, source)."""
+    """Point d'entrée : retourne (titre, résumé, source, tags)."""
     if url:
         url = url.strip()
         _check_url_public(url)
@@ -206,15 +243,18 @@ def process(url: str = None, file_path: str = None, raw_text: str = None):
             title, text = extract_youtube(url)
         else:
             title, text = extract_article(url)
-        return title, summarize(text, title), url
+        summary, tags = summarize(text, title)
+        return title, summary, url, tags
     if file_path:
         p = Path(file_path)
         if p.suffix.lower() in AUDIO_EXT:
             text = transcribe_file(p)
         else:
             text = p.read_text(errors="ignore")
-        return p.stem, summarize(text, p.stem), p.name
+        summary, tags = summarize(text, p.stem)
+        return p.stem, summary, p.name, tags
     if raw_text:
         title = raw_text.strip().splitlines()[0][:80]
-        return title, summarize(raw_text, title), "texte collé"
+        summary, tags = summarize(raw_text, title)
+        return title, summary, "texte collé", tags
     raise ValueError("Rien à traiter")

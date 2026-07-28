@@ -12,8 +12,12 @@ def now() -> str:
     return datetime.datetime.now().strftime("%d/%m %H:%M")
 
 
-def log(status: str, label: str, detail: str = ""):
+def log(status: str, label: str, detail: str = "", url: str = "", tags: list | None = None):
     entry = {"date": now(), "status": status, "label": label, "detail": detail[:200]}
+    if url:
+        entry["url"] = url
+    if tags:
+        entry["tags"] = tags
     with LOG.open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
     _rotate()

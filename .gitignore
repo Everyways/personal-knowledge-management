@@ -11,3 +11,4 @@ __pycache__/
 
 # Logs de l'app
 journal.jsonl
+url_index.json

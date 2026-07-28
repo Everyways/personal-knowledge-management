@@ -1,9 +1,12 @@
 """Tâches planifiées : git sync, analyse projet quotidienne, veille email du matin."""
 import datetime
 import fcntl
+import functools
 import os
+import re
 import smtplib
 import subprocess
+import traceback
 import urllib.parse
 from contextlib import contextmanager
 from email.mime.text import MIMEText
@@ -33,6 +36,29 @@ def _vault_lock():
             yield
         finally:
             fcntl.flock(fh, fcntl.LOCK_UN)
+
+
+def guarded(name: str):
+    """Filet de sécurité pour les tâches planifiées : sans ça, une exception
+    (comme le bug pipeline.ollama du 28/07, jamais visible que dans
+    journalctl) disparaît silencieusement — ni note, ni email, ni ligne dans
+    journal.jsonl. Ici on logue l'échec et on tente un email best-effort."""
+    def deco(fn):
+        @functools.wraps(fn)
+        def wrapper():
+            try:
+                fn()
+            except Exception as e:
+                err = str(e)[:200]
+                log("erreur", name, err)
+                traceback.print_exc()
+                try:
+                    send_email(f"[second-brain] échec : {name}",
+                              f"La tâche planifiée « {name} » a échoué :\n\n{err}")
+                except Exception:
+                    pass
+        return wrapper
+    return deco
 
 
 # ---------- Git ----------
@@ -109,6 +135,7 @@ def fetch_news(theme: str, n: int = 6):
     return [(e.title, e.link) for e in feed.entries[:n]]
 
 
+@guarded("veille du matin")
 def morning_digest():
     git_pull()
     today = datetime.date.today().isoformat()
@@ -120,7 +147,7 @@ def morning_digest():
             if not items:
                 continue
             listing = "\n".join(f"- {t}\n  {l}" for t, l in items)
-            synthesis = pipeline.ollama(
+            synthesis = pipeline.mistral_summarize(
                 f"Voici les actualités du jour sur le thème « {theme} » :\n{listing}\n\n"
                 "Rédige une synthèse en français (5-8 lignes) des tendances notables, "
                 "puis indique les 2 ou 3 liens les plus importants avec leur URL."
@@ -146,6 +173,7 @@ def morning_digest():
 
 # ---------- Analyse projet quotidienne ----------
 
+@guarded("analyse projet")
 def project_analysis():
     git_pull()
     projects = CONFIG["projects"]
@@ -153,7 +181,12 @@ def project_analysis():
     project = projects[today.toordinal() % len(projects)]
     desc = notes.read_note(f"Projets/{project}.md")[:4000]
     veille = notes.recent_notes(CONFIG["paths"]["veille"], n=2)
-    inbox = notes.recent_notes(CONFIG["paths"]["inbox"], n=3)
+    # Notes dont les tags recoupent le projet plutôt que les 3 dernières au
+    # hasard : les tags (générés par pipeline.summarize) donnent un vrai
+    # signal de pertinence. Si rien ne matche, notes_matching retombe sur
+    # les plus récentes (score nul partout -> tri par date).
+    keywords = re.findall(r"[a-zà-ÿ]{4,}", (project + " " + desc).lower())
+    inbox = notes.notes_matching(CONFIG["paths"]["inbox"], keywords, days=14, max_files=5)
     prompt = f"""Tu es un conseiller produit/business pragmatique. Projet analysé aujourd'hui : « {project} ».
 
 Description du projet :
@@ -185,7 +218,39 @@ Tâche :
    description (finance, IA, etc. si le projet n'en parle pas).
 
 Réponds en français, markdown, concis."""
-    result = pipeline.ollama(prompt)
+    result = pipeline.mistral_summarize(prompt)
     notes.write_note(CONFIG["paths"]["analyses"], f"Analyse {project}", result,
                      meta={"projet": project})
+    git_push()
+
+
+# ---------- Synthèse hebdomadaire ----------
+
+@guarded("synthèse hebdo")
+def weekly_review():
+    git_pull()
+    today = datetime.date.today()
+    week_start = today - datetime.timedelta(days=7)
+    content = notes.notes_since(CONFIG["paths"]["inbox"], days=7)
+    if not content.strip():
+        body = "Aucune lecture soumise cette semaine."
+    else:
+        prompt = f"""Voici les notes de lecture (résumés d'articles/vidéos soumis) de la semaine du {week_start.isoformat()} au {today.isoformat()} :
+
+{content[:12000]}
+
+Tâche : rédige une synthèse hebdomadaire en français, en markdown, qui prend du recul sur
+l'ensemble (pas une simple liste des titres) :
+## Thèmes dominants
+(3 à 5 puces : les sujets qui reviennent le plus)
+## Fil rouge
+(2 à 4 phrases : ce que ces lectures, mises bout à bout, disent de la semaine)
+## À creuser
+(1 à 3 pistes concrètes à approfondir la semaine prochaine)
+
+Sois concis."""
+        body = pipeline.mistral_summarize(prompt)
+    title = f"Synthèse hebdo du {today.isoformat()}"
+    notes.write_note(CONFIG["paths"].get("hebdo", "Veille/Hebdo"), title, body)
+    send_email(title, body)
     git_push()

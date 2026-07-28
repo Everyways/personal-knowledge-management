@@ -11,7 +11,7 @@ import yaml
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, FastAPI, File, Form, UploadFile, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -116,21 +116,61 @@ else:
 # In-memory job tracker: {job_id: {id, label, status, detail, date}}
 ACTIVE_JOBS: dict[str, dict] = {}
 
+# Un job qui échoue sur un 429 (quota Mistral épuisé) a de bonnes chances de
+# passer s'il réessaie un peu plus tard plutôt que d'échouer immédiatement :
+# observé en pratique sur le tier gratuit (plusieurs 429 le 28/07).
+RATE_LIMIT_BACKOFF = [30, 90]  # secondes entre les essais
+
+
+def _is_rate_limited(err: str) -> bool:
+    low = err.lower()
+    return "429" in err or "rate_limited" in low or "rate limit" in low
+
 
 def process_job(job_id: str, url=None, file_path=None, raw_text=None, label=""):
     ACTIVE_JOBS[job_id]["status"] = "processing"
     ACTIVE_JOBS[job_id]["date"] = _now()
     try:
-        title, summary, source = pipeline.process(url=url, file_path=file_path, raw_text=raw_text)
-        path = notes.write_note(CONFIG["paths"]["inbox"], title, summary,
-                                meta={"url": source})
+        if url:
+            existing = notes.find_recent_url(url)
+            if existing:
+                detail = f"déjà traité le {existing['date']} -> {existing['path']}"
+                ACTIVE_JOBS[job_id].update({"status": "doublon", "label": label or url,
+                                            "detail": detail, "date": _now()})
+                log("doublon", label or url, detail, url=url)
+                return
+
+        attempt = 0
+        while True:
+            try:
+                title, summary, source, tags = pipeline.process(
+                    url=url, file_path=file_path, raw_text=raw_text)
+                break
+            except Exception as e:
+                err = str(e)
+                if attempt < len(RATE_LIMIT_BACKOFF) and _is_rate_limited(err):
+                    wait = RATE_LIMIT_BACKOFF[attempt]
+                    attempt += 1
+                    ACTIVE_JOBS[job_id].update({
+                        "status": "attente",
+                        "detail": f"limite atteinte, nouvel essai dans {wait}s ({attempt}/{len(RATE_LIMIT_BACKOFF)})",
+                        "date": _now()})
+                    time.sleep(wait)
+                    ACTIVE_JOBS[job_id]["status"] = "processing"
+                    continue
+                raise
+
+        meta = {"url": source}
+        if tags:
+            meta["tags"] = tags
+        path = notes.write_note(CONFIG["paths"]["inbox"], title, summary, meta=meta)
         ACTIVE_JOBS[job_id].update({"status": "ok", "label": title,
-                                    "detail": path.name, "date": _now()})
-        log("ok", title, path.name)
+                                    "detail": path.name, "date": _now(), "tags": tags})
+        log("ok", title, path.name, url=url or "", tags=tags)
     except Exception as e:
         err = str(e)[:200]
         ACTIVE_JOBS[job_id].update({"status": "erreur", "detail": err, "date": _now()})
-        log("erreur", label or url or "fichier", err)
+        log("erreur", label or url or "fichier", err, url=url or "")
         traceback.print_exc()
     finally:
         if file_path:
@@ -144,92 +184,6 @@ def _new_job(label: str) -> str:
     return job_id
 
 
-FAVICON_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'
-               '<text y="0.9em" font-size="90">&#129504;</text></svg>')
-
-PAGE = """<!doctype html><html lang="fr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="icon" href="/favicon.ico">
-<title>second-brain</title><style>
-body{font-family:system-ui;max-width:680px;margin:40px auto;padding:0 16px;background:#fafaf7;color:#222}
-h1{font-size:1.4em}
-form{background:#fff;border:1px solid #ddd;border-radius:10px;padding:18px;margin-bottom:24px}
-input[type=url],textarea{width:100%;padding:10px;margin:6px 0 14px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box}
-button{background:#3a5a40;color:#fff;border:0;padding:10px 22px;border-radius:6px;font-size:1em;cursor:pointer}
-table{width:100%;border-collapse:collapse;font-size:.9em}
-td{padding:7px 8px;border-bottom:1px solid #eee;word-break:break-word}
-td:first-child{white-space:nowrap;width:80px}
-td:nth-child(2){width:28px;text-align:center}
-.ok{color:#3a7d44} .erreur{color:#c0392b} .info{color:#aaa} .processing{color:#e07b00}
-.dot{display:inline-block;animation:spin 1.2s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-#indicator{font-size:.8em;color:#aaa;margin-bottom:6px;min-height:1.2em}
-small{color:#888}
-</style></head><body>
-<h1>&#129504; second-brain</h1>
-<form action="/submit" method="post" enctype="multipart/form-data">
-  <label>URL (article, YouTube&hellip;)</label>
-  <input type="url" name="url" placeholder="https://&hellip;">
-  <label>ou fichier (audio, vid&eacute;o, texte)</label>
-  <input type="file" name="file" style="margin:6px 0 14px">
-  <label>ou texte &agrave; analyser</label>
-  <textarea name="text" rows="4" placeholder="Colle un texte ici&hellip;"></textarea>
-  <button>Analyser &rarr; Obsidian</button>
-  <p><small>Traitement asynchrone &mdash; l&rsquo;audio/vid&eacute;o sans sous-titres peut prendre plusieurs minutes.</small></p>
-</form>
-<h2>Traitements</h2>
-<div id="indicator"></div>
-<table id="jobs-table"><tr><td class="info" colspan="4">Chargement&hellip;</td></tr></table>
-<script>
-const ICONS = {queued:"&#9203;", processing:'<span class="dot">&#9696;</span>', ok:"&#9989;", erreur:"&#10060;", info:"&#128203;"};
-const CSS   = {queued:"info", processing:"processing", ok:"ok", erreur:"erreur", info:"info"};
-let timer = null;
-
-function render(data) {
-  const rows = data.jobs || [];
-  const hist = (data.history || []).filter(h => !rows.find(r => r.label === h.label && r.status !== "queued"));
-  const all = [...rows, ...hist].slice(0, 24);
-  if (!all.length) {
-    document.getElementById("jobs-table").innerHTML = "<tr><td class='info' colspan='4'>Rien pour l'instant</td></tr>";
-    return;
-  }
-  document.getElementById("jobs-table").innerHTML = all.map(e =>
-    `<tr>
-      <td class="info">${e.date}</td>
-      <td title="${e.status}">${ICONS[e.status] || e.status}</td>
-      <td class="${CSS[e.status] || ''}">${e.label}</td>
-      <td class="info" style="font-size:.8em">${e.detail || ''}</td>
-    </tr>`
-  ).join("");
-
-  const active = rows.filter(r => r.status === "queued" || r.status === "processing");
-  const ind = document.getElementById("indicator");
-  if (active.length) {
-    ind.innerHTML = `&#128260; ${active.length} job(s) en cours&hellip;`;
-    schedule(2000);
-  } else {
-    ind.innerHTML = "";
-    schedule(10000);
-  }
-}
-
-function schedule(ms) {
-  clearTimeout(timer);
-  timer = setTimeout(poll, ms);
-}
-
-async function poll() {
-  try {
-    const r = await fetch("/api/status");
-    render(await r.json());
-  } catch(e) { schedule(5000); }
-}
-
-poll();
-</script>
-</body></html>"""
-
-
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse(request, "index.html")
@@ -237,8 +191,8 @@ async def home(request: Request):
 
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
-    return Response(FAVICON_SVG, media_type="image/svg+xml",
-                    headers={"Cache-Control": "public, max-age=86400"})
+    return FileResponse(BASE / "static" / "favicon.ico",
+                        headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/api/status")
@@ -258,9 +212,30 @@ def api_today():
     return JSONResponse(today_entries)
 
 
+@app.get("/api/search")
+def api_search(q: str = ""):
+    return JSONResponse(notes.search_notes(q))
+
+
+@app.get("/api/note")
+def api_note(path: str = ""):
+    content = notes.get_note_safe(path)
+    if content is None:
+        return JSONResponse({"error": "introuvable"}, status_code=404)
+    return JSONResponse({"content": content})
+
+
+def _queue_urls(background: BackgroundTasks, raw: str):
+    for line in raw.splitlines():
+        line = line.strip()
+        if line.startswith("http://") or line.startswith("https://"):
+            job_id = _new_job(line[:80])
+            background.add_task(process_job, job_id, url=line, label=line)
+
+
 @app.post("/submit")
 async def submit(background: BackgroundTasks,
-                 url: str = Form(""), text: str = Form(""),
+                 url: str = Form(""), urls: str = Form(""), text: str = Form(""),
                  file: UploadFile = File(None)):
     if file and file.filename:
         # Path(...).name strips any directory components (e.g. "../../etc/passwd")
@@ -278,6 +253,8 @@ async def submit(background: BackgroundTasks,
     elif text.strip():
         job_id = _new_job("texte collé")
         background.add_task(process_job, job_id, raw_text=text, label="texte collé")
+    if urls.strip():
+        _queue_urls(background, urls)
     return RedirectResponse("/", status_code=303)
 
 
@@ -285,12 +262,49 @@ async def submit(background: BackgroundTasks,
 async def api_submit(payload: dict, background: BackgroundTasks):
     url = (payload.get("url") or "").strip()
     text = (payload.get("text") or "").strip()
-    if not url and not text:
-        return {"ok": False, "error": "url ou text requis"}
-    label = url or "texte collé"
-    job_id = _new_job(label[:80])
-    background.add_task(process_job, job_id, url=url or None, raw_text=text or None, label=label)
+    urls = payload.get("urls") or []
+    if not url and not text and not urls:
+        return {"ok": False, "error": "url, urls ou text requis"}
+    job_ids = []
+    if url or text:
+        label = url or "texte collé"
+        job_id = _new_job(label[:80])
+        background.add_task(process_job, job_id, url=url or None, raw_text=text or None, label=label)
+        job_ids.append(job_id)
+    for u in urls:
+        u = (u or "").strip()
+        if u.startswith("http://") or u.startswith("https://"):
+            job_id = _new_job(u[:80])
+            background.add_task(process_job, job_id, url=u, label=u)
+            job_ids.append(job_id)
+    return {"ok": True, "job_ids": job_ids}
+
+
+@app.post("/api/retry")
+async def api_retry(payload: dict, background: BackgroundTasks):
+    url = (payload.get("url") or "").strip()
+    if not url:
+        return {"ok": False, "error": "url requise"}
+    job_id = _new_job(url[:80])
+    background.add_task(process_job, job_id, url=url, label=url)
     return {"ok": True, "job_id": job_id}
+
+
+@app.get("/share")
+async def share(background: BackgroundTasks, url: str = "", text: str = "", title: str = ""):
+    """Cible du Web Share Target (PWA) : reçoit ce que le téléphone partage.
+    Selon l'appli source, le lien arrive dans `url` OU dans `text` — on
+    détecte donc le cas où `text` est en fait une URL."""
+    candidate = url.strip() or text.strip()
+    if candidate.startswith("http://") or candidate.startswith("https://"):
+        job_id = _new_job(candidate[:80])
+        background.add_task(process_job, job_id, url=candidate, label=candidate)
+    else:
+        raw = (title.strip() + "\n" + text.strip()).strip()
+        if raw:
+            job_id = _new_job("partagé depuis mobile")
+            background.add_task(process_job, job_id, raw_text=raw, label="partagé depuis mobile")
+    return RedirectResponse("/", status_code=303)
 
 
 def start_scheduler():
@@ -304,6 +318,9 @@ def start_scheduler():
     scheduler.add_job(jobs.morning_digest, "cron",
                       hour=sch["digest_hour"], minute=sch.get("digest_minute", 0),
                       id="veille_email", misfire_grace_time=3600)
+    scheduler.add_job(jobs.weekly_review, "cron",
+                      day_of_week=sch.get("weekly_day", "sun"), hour=sch.get("weekly_hour", 8),
+                      minute=0, id="synthese_hebdo", misfire_grace_time=3600)
     scheduler.start()
     return scheduler
 

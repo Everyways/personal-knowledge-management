@@ -3,41 +3,58 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#3a5a40">
   <link rel="icon" href="/favicon.ico">
+  <link rel="manifest" href="/static/manifest.json">
   <title>second-brain</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <h1>🧠 second-brain</h1>
+  <header class="topbar">
+    <h1><span class="brain">🧠</span> second-brain</h1>
+    <p class="tagline">Soumets, on résume, ça atterrit dans Obsidian.</p>
+  </header>
 
-  <form action="/submit" method="post" enctype="multipart/form-data">
-    <label>URL (article, YouTube…)</label>
+  <form class="card" action="/submit" method="post" enctype="multipart/form-data">
+    <label>URL <span class="hint">(article, YouTube…)</span></label>
     <input type="url" name="url" placeholder="https://…">
 
-    <label>ou fichier (audio, vidéo, texte)</label>
+    <label>ou plusieurs liens <span class="hint">(un par ligne)</span></label>
+    <textarea name="urls" rows="3" placeholder="https://…&#10;https://…"></textarea>
+
+    <label>ou fichier <span class="hint">(audio, vidéo, texte)</span></label>
     <input type="file" name="file">
 
     <label>ou texte à analyser</label>
     <textarea name="text" rows="4" placeholder="Colle un texte ici…"></textarea>
 
-    <button>Analyser → Obsidian</button>
-    <p><small>Traitement asynchrone — l’audio/vidéo sans sous-titres peut prendre plusieurs minutes.</small></p>
+    <button type="submit">Analyser → Obsidian</button>
+    <p class="note">Traitement asynchrone — l'audio/vidéo sans sous-titres peut prendre plusieurs minutes.</p>
   </form>
 
-  <div class="tabs">
-    <button class="tab-btn active" onclick="showTab('today')">Lu aujourd’hui</button>
-    <button class="tab-btn" onclick="showTab('submitted')">Soumis</button>
-  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="today" onclick="showTab('today')">Lu aujourd'hui</button>
+    <button class="tab-btn" data-tab="submitted" onclick="showTab('submitted')">Soumis</button>
+    <button class="tab-btn" data-tab="search" onclick="showTab('search')">Recherche</button>
+  </nav>
 
-  <div id="today" class="tab-content">
-    <h2>Lu aujourd’hui</h2>
-    <div id="today-list">Chargement…</div>
-  </div>
+  <section id="today" class="tab-content">
+    <div id="today-list" class="entry-list">Chargement…</div>
+  </section>
 
-  <div id="submitted" class="tab-content" style="display:none">
-    <h2>Soumis</h2>
-    <div id="submitted-list">Chargement…</div>
-  </div>
+  <section id="submitted" class="tab-content" style="display:none">
+    <div id="indicator"></div>
+    <div id="submitted-list" class="entry-list">Chargement…</div>
+  </section>
+
+  <section id="search" class="tab-content" style="display:none">
+    <input type="search" id="search-input" placeholder="Rechercher dans tes notes…" oninput="onSearchInput(event)">
+    <div id="search-results" class="entry-list"></div>
+    <div id="note-preview" style="display:none">
+      <button class="small" onclick="closePreview()">← Retour</button>
+      <pre id="note-preview-content"></pre>
+    </div>
+  </section>
 
   <script src="/static/app.js"></script>
 </body>

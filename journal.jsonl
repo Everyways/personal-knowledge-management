@@ -169,3 +169,19 @@
 {"date": "27/07 11:46", "status": "ok", "label": "The Creator of Claude Code Doesn’t Prompt It Anymore", "detail": "2026-07-27 The-Creator-of-Claude-Code-Doesnt-Prompt-It-Anymore 2.md"}
 {"date": "27/07 11:52", "status": "ok", "label": "Why \"It Worked on My Machine\" Still Happens in 2026", "detail": "2026-07-27 Why-It-Worked-on-My-Machine-Still-Happens-in-2026.md"}
 {"date": "28/07 03:10", "status": "ok", "label": "git push (vault)", "detail": "sync effectuée"}
+{"date": "28/07 20:44", "status": "erreur", "label": "https://www.slow-journalism.com/", "detail": "API error occurred: Status 401. Body: {\"detail\":\"Unauthorized\"}"}
+{"date": "28/07 20:47", "status": "erreur", "label": "https://www.slow-journalism.com/", "detail": "API error occurred: Status 401. Body: {\"detail\":\"Unauthorized\"}"}
+{"date": "28/07 20:50", "status": "ok", "label": "Verifying that you are not a robot...", "detail": "2026-07-28 Verifying-that-you-are-not-a-robot.md"}
+{"date": "28/07 20:51", "status": "ok", "label": "The 2026-07-28 Specification", "detail": "2026-07-28 The-2026-07-28-Specification.md"}
+{"date": "28/07 20:51", "status": "ok", "label": "The 2026-07-28 Specification", "detail": "2026-07-28 The-2026-07-28-Specification 2.md"}
+{"date": "28/07 20:53", "status": "ok", "label": "Substack writers, you need a website!", "detail": "2026-07-28 Substack-writers-you-need-a-website.md"}
+{"date": "28/07 20:53", "status": "ok", "label": "Anthropeum", "detail": "2026-07-28 Anthropeum.md"}
+{"date": "28/07 20:53", "status": "ok", "label": "Initiative detail", "detail": "2026-07-28 Initiative-detail.md"}
+{"date": "28/07 20:55", "status": "ok", "label": "It's not empowering to hand off the details", "detail": "2026-07-28 Its-not-empowering-to-hand-off-the-details.md"}
+{"date": "28/07 20:55", "status": "erreur", "label": "https://www.imperialviolet.org/2026/07/26/zstd-lean.html", "detail": "API error occurred: Status 429. Body: {\"object\":\"error\",\"message\":\"Rate limit exceeded\",\"type\":\"rate_limited\",\"param\":null,\"code\":\"1300\",\"raw_status_code\":429}"}
+{"date": "28/07 20:55", "status": "erreur", "label": "https://www.imperialviolet.org/2026/07/26/zstd-lean.html", "detail": "API error occurred: Status 429. Body: {\"object\":\"error\",\"message\":\"Rate limit exceeded\",\"type\":\"rate_limited\",\"param\":null,\"code\":\"1300\",\"raw_status_code\":429}"}
+{"date": "28/07 20:55", "status": "erreur", "label": "https://www.theclimatebrink.com/p/the-strongest-el-nino-ever", "detail": "API error occurred: Status 429. Body: {\"object\":\"error\",\"message\":\"Rate limit exceeded\",\"type\":\"rate_limited\",\"param\":null,\"code\":\"1300\",\"raw_status_code\":429}"}
+{"date": "28/07 21:41", "status": "ok", "label": "US prosecutors charge Atlanta man after GrapheneOS phone wipes itself during airport search", "detail": "2026-07-28 US-prosecutors-charge-Atlanta-man-after-GrapheneOS-phone-wip.md", "url": "https://www.techspot.com/news/113236-us-prosecutors-charge-atlanta-man-after-grapheneos-phone.html", "tags": ["grapheneos", "vie-privée", "frontières", "cop-city", "obstruction-à-la-justice"]}
+{"date": "28/07 21:49", "status": "erreur", "label": "http://127.0.0.1:1/aaa", "detail": "URL refusée : adresse privée/locale", "url": "http://127.0.0.1:1/aaa"}
+{"date": "28/07 21:49", "status": "erreur", "label": "http://127.0.0.1:1/bbb", "detail": "URL refusée : adresse privée/locale", "url": "http://127.0.0.1:1/bbb"}
+{"date": "28/07 21:50", "status": "ok", "label": "Exclusive | Netflix exec goes ballistic after being fired for stunning ‘trust exercise’ confession at retreat: suit", "detail": "2026-07-28 Exclusive-Netflix-exec-goes-ballistic-after-being-fired-for.md", "url": "https://nypost.com/2026/07/26/us-news/netflix-exec-goes-ballistic-after-being-fired-for-stunning-trust-exercise-confession-at-retreat-suit/", "tags": ["netflix", "licenciement", "kétamine", "culture-d-entreprise", "alcool-au-travail"]}
